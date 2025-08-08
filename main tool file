@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Digital Matrix — AI Tools Hub</title>
+  <meta name="description" content="Digital Matrix: 100+ AI & web tools. Image, audio, video, SEO, conversion, and AI generation — fast, modern, and free." />
+  <!-- Tailwind CDN for rapid prototyping -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <!-- GSAP for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root{
+      --accent: #06b6d4; /* cyan-500 */
+      --accent-2:#7c3aed; /* purple-600 */
+      --bg-dark:#0f172a;
+    }
+    html,body { height:100%; }
+    body {
+      font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: linear-gradient(180deg,#071024 0%, #0b1220 50%, #071025 100%);
+      color: #e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    /* Glass header */
+    .glass {
+      background: rgba(11,17,28,0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    /* Dropdown behaviour for keyboard accessibility */
+    .dropdown:focus-within .menu, .dropdown:hover .menu { display:block; }
+    .menu { display:none; }
+    /* Button animations */
+    .btn-animated {
+      background: linear-gradient(90deg,var(--accent),var(--accent-2));
+      box-shadow: 0 8px 30px rgba(124,58,237,0.12);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .btn-animated:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 18px 50px rgba(12,74,110,0.18); }
+    /* Center static content container */
+    .center-max { max-width: 1180px; margin-left:auto;margin-right:auto;padding-left:1rem;padding-right:1rem; }
+    /* Small helper */
+    .chip { background: rgba(255,255,255,0.04); padding: .25rem .6rem; border-radius:999px; font-size:.85rem;}
+    /* Tool card */
+    .tool-card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.03); }
+    /* Spline iframe placeholder styling */
+    .spline-frame { border-radius: 14px; overflow:hidden; border: 1px solid rgba(255,255,255,0.03); }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="glass fixed w-full top-0 left-0 z-50">
+    <div class="center-max flex items-center justify-between py-4">
+      <div class="flex items-center gap-4">
+        <div id="logo" class="text-2xl font-extrabold tracking-tight cursor-pointer" title="Digital Matrix">
+          <span style="color:var(--accent)">Digital</span><span style="color:#9fb8ff"> Matrix</span>
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+          <div class="chip">100+ Tools</div>
+          <div class="text-sm text-slate-300 ml-2">AI • Image • Video • SEO</div>
+        </div>
+      </div>
+
+      <!-- CENTERED NAV LINKS -->
+      <nav class="hidden lg:flex items-center gap-6 text-sm font-medium">
+        <a class="nav-link" data-link="home" href="#home">Home</a>
+
+        <!-- Dropdown built from JSON below -->
+        <div class="relative dropdown">
+          <button class="nav-link flex items-center gap-2">Tools ▾</button>
+          <div class="menu absolute left-0 mt-3 w-64 p-4 rounded-xl shadow-xl bg-gradient-to-br from-[#07122a]/80 to-[#0b1220]/60">
+            <div id="navCategories" class="grid grid-cols-2 gap-2"></div>
+          </div>
+        </div>
+
+        <a class="nav-link" data-link="about" href="#about">About</a>
+        <a class="nav-link" data-link="contact" href="#contact">Contact</a>
+        <a class="nav-link" data-link="terms" href="#terms">Terms</a>
+      </nav>
+
+      <!-- Right: Search & Add tool -->
+      <div class="flex items-center gap-3">
+        <div class="relative w-60 md:w-80">
+          <input id="searchInput" aria-label="Search tools" placeholder="Search tools, e.g., 'compress'..." class="w-full rounded-full py-2 px-4 text-sm bg-[#061224] placeholder:text-slate-400 border border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400"/>
+          <div id="searchSuggestions" class="absolute left-0 right-0 mt-1 bg-[#041022] rounded-md shadow-lg hidden text-sm max-h-60 overflow-auto z-40"></div>
+        </div>
+
+        <button id="addToolBtn" class="hidden md:inline-flex btn-animated text-black px-4 py-2 rounded-full text-sm font-semibold">Add Tool</button>
+
+        <button id="menuMobileBtn" class="lg:hidden p-2 rounded-md bg-[#061224]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h12M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile nav (hidden by default) -->
+  <div id="mobileNav" class="fixed inset-x-0 top-16 z-40 bg-[#061224] p-4 hidden">
+    <div class="flex flex-col gap-2">
+      <a href="#home" class="py-2 px-3 rounded-md hover:bg-white/5">Home</a>
+      <a href="#tools" class="py-2 px-3 rounded-md hover:bg-white/5">Tools</a>
+      <a href="#about" class="py-2 px-3 rounded-md hover:bg-white/5">About</a>
+      <a href="#contact" class="py-2 px-3 rounded-md hover:bg-white/5">Contact</a>
+      <a href="#terms" class="py-2 px-3 rounded-md hover:bg-white/5">Terms</a>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="pt-28 pb-24">
+    <section id="home" class="center-max grid md:grid-cols-2 gap-8 items-center py-12">
+      <!-- Left: Text -->
+      <div class="text-center md:text-left">
+        <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">Digital Matrix <span style="color:var(--accent)">—</span> Smarter Tools. Seamless Workflow.</h1>
+        <p class="text-slate-300 max-w-xl mb-6">
+          A modern suite of 100+ professional web tools powered by AI. Create, convert, optimize, and automate tasks with instant tools, Spline 3D hero visuals, and JSON-configured functionality. No signup required.
+        </p>
+
+        <div class="flex flex-wrap gap-3">
+          <button id="exploreBtn" class="btn-animated text-black px-5 py-3 rounded-full font-semibold">Explore Tools</button>
+          <button id="tryAI" class="border border-slate-600 px-5 py-3 rounded-full text-sm hover:bg-white/5">Try Gemini (Demo)</button>
+        </div>
+
+        <div class="mt-6 flex gap-3 items-center text-sm text-slate-400">
+          <div class="chip">No signup • Ads ready</div>
+          <div class="chip">JSON-driven</div>
+          <div class="chip">Spline 3D</div>
+        </div>
+      </div>
+
+      <!-- Right: 3D Spline embed placeholder -->
+      <div>
+        <!-- Replace the iframe src with your Spline scene URL or embed code -->
+        <div class="spline-frame h-80 md:h-96 w-full">
+          <iframe id="splineFrame" src="about:blank" title="Spline 3D scene" class="w-full h-full" frameborder="0" allow="autoplay;fullscreen;vr"></iframe>
+        </div>
+        <div class="mt-3 text-xs text-slate-400 italic">Replace the Spline src in the code where indicated. Or use a GLTF viewer if preferred.</div>
+      </div>
+    </section>
+
+    <!-- Tools area (dynamic SPA style) -->
+    <section id="tools" class="center-max mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Tools</h2>
+        <div class="flex items-center gap-3">
+          <select id="categoryFilter" class="bg-[#061224] text-slate-200 rounded-lg px-3 py-2 text-sm">
+            <option value="all">All Categories</option>
+          </select>
+          <button id="exportJSON" class="px-3 py-2 rounded-md bg-white/5 hover:bg-white/8">Export JSON</button>
+        </div>
+      </div>
+
+      <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+      <!-- Add tool panel (toggle) -->
+      <div id="addToolPanel" class="mt-6 p-4 rounded-xl tool-card hidden">
+        <h3 class="font-semibold mb-2">Add New Tool</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input id="newToolName" placeholder="Tool name (e.g., Image Compressor)" class="p-2 rounded border bg-transparent" />
+          <select id="newToolCategory" class="p-2 rounded border bg-transparent"></select>
+          <input id="newToolDesc" placeholder="Short description" class="p-2 rounded border bg-transparent" />
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button id="saveTool" class="btn-animated px-4 py-2 rounded-full text-black font-semibold">Save</button>
+          <button id="cancelAdd" class="px-4 py-2 rounded-full border">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="center-max mt-12 bg-gradient-to-br from-[#071027]/30 to-transparent rounded-xl p-8">
+      <h2 class="text-2xl font-bold mb-3">About Digital Matrix</h2>
+      <p class="text-slate-300 max-w-3xl">
+        Digital Matrix is a modern tools platform focused on developer and creator productivity. It combines curated utilities (image, audio, video, SEO, developer) with AI features through Google Gemini (server-proxy recommended). The site is JSON-driven so you can add tools fast, and it uses 3D Spline scenes for an immersive hero.
+      </p>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="center-max mt-10 p-6">
+      <h2 class="text-2xl font-bold mb-3">Contact</h2>
+      <p class="text-slate-300 mb-4">For ad inquiries, partnerships, or integrations, use the form below.</p>
+      <form id="contactForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input id="contactName" placeholder="Name" class="p-3 rounded border bg-transparent" required />
+        <input id="contactEmail" placeholder="Email" type="email" class="p-3 rounded border bg-transparent" required />
+        <textarea id="contactMessage" placeholder="Message" class="p-3 rounded border bg-transparent md:col-span-2" rows="5" required></textarea>
+        <div class="md:col-span-2 flex gap-2">
+          <button type="submit" class="btn-animated px-4 py-2 rounded-full text-black font-semibold">Send</button>
+          <button type="button" id="contactReset" class="px-4 py-2 rounded-full border">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Terms -->
+    <section id="terms" class="center-max mt-10 p-6">
+      <h2 class="text-2xl font-bold mb-3">Terms & Privacy</h2>
+      <p class="text-slate-300">
+        Use of Digital Matrix means you accept the terms. This site does not collect user accounts; ad slots and API usage must be set up by site owner. Gemini keys should stay server-side. Replace ad placeholders with your network code.
+      </p>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass border-t border-white/5 py-8 mt-12">
+    <div class="center-max flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="text-lg font-bold">Digital Matrix</div>
+        <div class="text-sm text-slate-400">Modern tools, fast workflows</div>
+      </div>
+      <div class="flex gap-6 text-sm">
+        <a href="#about" class="hover:underline">About</a>
+        <a href="#contact" class="hover:underline">Contact</a>
+        <a href="#terms" class="hover:underline">Terms</a>
+      </div>
+      <div class="text-sm text-slate-400">© <span id="year"></span> Digital Matrix</div>
+    </div>
+  </footer>
+
+  <!-- Templates & Scripts -->
+  <template id="toolCardTpl">
+    <div class="p-4 rounded-xl tool-card h-full flex flex-col justify-between">
+      <div>
+        <div class="text-xs text-slate-400 mb-1 tool-cat"></div>
+        <div class="text-lg font-semibold tool-name"></div>
+        <p class="mt-2 text-sm text-slate-300 tool-desc"></p>
+      </div>
+      <div class="mt-4 flex items-center justify-between gap-2">
+        <div class="text-xs text-slate-400">Fast • Free</div>
+        <div class="flex gap-2">
+          <button class="openToolBtn px-3 py-1 rounded-md border text-sm">Open</button>
+          <button class="copyJsonBtn px-3 py-1 rounded-md border text-sm">JSON</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+  // ---------------------------
+  // Initial JSON Data (editable)
+  // ---------------------------
+  const DATA = {
+    siteName: "Digital Matrix",
+    categories: [
+      { id: "ai", title: "AI Tools", desc: "Text, image, and audio generation" },
+      { id: "image", title: "Image Tools", desc: "Compress, resize, edit images" },
+      { id: "video", title: "Video Tools", desc: "Compress, trim and convert video" },
+      { id: "audio", title: "Audio Tools", desc: "Edit and generate audio" },
+      { id: "seo", title: "SEO Tools", desc: "Keyword and meta helpers" },
+      { id: "dev", title: "Developer Tools", desc: "JSON, regex, base64, API tester" }
+    ],
+    tools: [
+      { id: "ai-1", name: "AI Text Generator", category: "ai", desc: "Generate content using Gemini (server proxy recommended)" },
+      { id: "ai-2", name: "AI Image Creator", category: "ai", desc: "Create images from prompts" },
+      { id: "image-1", name: "Image Compressor", category: "image", desc: "Lossless and lossy compression for web" },
+      { id: "image-2", name: "Background Remover", category: "image", desc: "Remove image backgrounds automatically" },
+      { id: "video-1", name: "Video Compressor", category: "video", desc: "Reduce video size while keeping quality" },
+      { id: "audio-1", name: "Text-to-Speech", category: "audio", desc: "Generate human-like voices from text" },
+      { id: "seo-1", name: "Meta Tag Generator", category: "seo", desc: "Create SEO meta tags quickly" },
+      { id: "dev-1", name: "JSON Formatter", category: "dev", desc: "Beautify or minify JSON" }
+    ]
+  };
+
+  // ---------------------------
+  // Utility functions
+  // ---------------------------
+  const byId = (id) => document.getElementById(id);
+  const yearSpan = byId('year'); yearSpan.textContent = new Date().getFullYear();
+
+  // Populate nav categories in dropdown
+  function populateNavCategories(){
+    const nav = byId('navCategories'); nav.innerHTML = '';
+    DATA.categories.forEach(cat=>{
+      const el = document.createElement('div');
+      el.className = 'p-2 rounded-md hover:bg-white/5 cursor-pointer';
+      el.innerHTML = `<div class="font-semibold text-sm" data-cat="${cat.id}">${cat.title}</div><div class="text-xs text-slate-400">${cat.desc}</div>`;
+      el.addEventListener('click',()=>{ filterByCategory(cat.id); window.scrollTo({top:document.querySelector('#tools').offsetTop-90,behavior:'smooth'});});
+      nav.appendChild(el);
+    });
+  }
+
+  // Populate category filter select
+  function populateCategoryFilter(){
+    const sel = byId('categoryFilter'); sel.innerHTML = '<option value="all">All Categories</option>';
+    DATA.categories.forEach(c=>{
+      const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.title; sel.appendChild(opt);
+    });
+    // Also populate add tool category list
+    const addSel = byId('newToolCategory'); addSel.innerHTML = '';
+    DATA.categories.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.title; addSel.appendChild(o); });
+  }
+
+  // Render tools grid
+  function renderTools(filter='all'){
+    const grid = byId('toolsGrid'); grid.innerHTML = '';
+    const tpl = document.getElementById('toolCardTpl');
+    const tools = DATA.tools.filter(t => filter==='all' ? true : t.category===filter);
+    tools.forEach(tool=>{
+      const clone = tpl.content.cloneNode(true);
+      clone.querySelector('.tool-cat').textContent = DATA.categories.find(c=>c.id===tool.category)?.title || 'Misc';
+      clone.querySelector('.tool-name').textContent = tool.name;
+      clone.querySelector('.tool-desc').textContent = tool.desc;
+      const openBtn = clone.querySelector('.openToolBtn');
+      openBtn.addEventListener('click',()=> openToolModal(tool));
+      const copyJsonBtn = clone.querySelector('.copyJsonBtn');
+      copyJsonBtn.addEventListener('click',()=> navigator.clipboard.writeText(JSON.stringify(tool, null, 2)).then(()=> alert('Tool JSON copied')));
+      grid.appendChild(clone);
+    });
+  }
+
+  // Auto-search suggestions
+  const searchInput = byId('searchInput');
+  const suggestionsBox = byId('searchSuggestions');
+  function searchSuggestions(q){
+    if(!q){ suggestionsBox.classList.add('hidden'); suggestionsBox.innerHTML=''; return; }
+    const list = DATA.tools.filter(t => t.name.toLowerCase().includes(q.toLowerCase()) || (t.desc && t.desc.toLowerCase().includes(q.toLowerCase())));
+    suggestionsBox.innerHTML = list.slice(0,8).map(t=>`<button data-id="${t.id}" class="w-full text-left px-3 py-2 hover:bg-white/5">${t.name} <div class="text-xs text-slate-400">${DATA.categories.find(c=>c.id===t.category)?.title||''}</div></button>`).join('');
+    suggestionsBox.classList.remove('hidden');
+    // attach click handlers
+    suggestionsBox.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=> {
+        const id = btn.getAttribute('data-id');
+        const tool = DATA.tools.find(x=>x.id===id);
+        if(tool) openToolModal(tool);
+        suggestionsBox.classList.add('hidden');
+      });
+    });
+  }
+
+  // Open tool modal (simple prompt for demo)
+  function openToolModal(tool){
+    // Create a lightweight modal with tool info and example JSON config
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-50';
+    modal.innerHTML = `<div class="bg-[#031226] rounded-xl p-6 w-11/12 md:w-3/4 lg:w-1/2">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-xl font-semibold mb-1">${tool.name}</h3>
+          <div class="text-xs text-slate-400 mb-3">${DATA.categories.find(c=>c.id===tool.category)?.title || ''}</div>
+        </div>
+        <button class="text-slate-300 closeBtn">✕</button>
+      </div>
+      <p class="text-slate-300 mb-4">${tool.desc}</p>
+      <div class="mb-2 text-xs text-slate-400">Modern JSON configuration (editable)</div>
+      <textarea id="toolJsonEditor" class="w-full h-36 p-3 rounded bg-[#021424] text-xs border">${JSON.stringify(generateToolJSON(tool), null, 2)}</textarea>
+      <div class="mt-3 flex justify-end gap-2">
+        <button id="runTool" class="btn-animated text-black px-4 py-2 rounded-full font-semibold">Run (Demo)</button>
+        <button class="px-4 py-2 rounded border closeBtn">Close</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.querySelectorAll('.closeBtn').forEach(b=>b.addEventListener('click', ()=> modal.remove()));
+    modal.querySelector('#runTool').addEventListener('click', async ()=>{
+      const jsonText = byId('toolJsonEditor').value;
+      let cfg; try{ cfg = JSON.parse(jsonText); } catch(e){ alert('Invalid JSON'); return; }
+      // Demo: if tool is an AI tool, call Gemini proxy (server-side required)
+      if(tool.category === 'ai'){
+        // Replace /api/gemini with your server proxy endpoint
+        const prompt = cfg.prompt || "Write a short helpful description about " + tool.name;
+        // NOTE: DO NOT PUT API KEYS IN CLIENT. This example calls /api/gemini which should be a server route that uses your Gemini key securely.
+        try{
+          const res = await fetch('/api/gemini-text', {
+            method:'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ prompt })
+          });
+          if(res.ok){
+            const data = await res.json();
+            alert('Gemini response: ' + (data.output?.slice?.(0,400) || JSON.stringify(data).slice(0,400)));
+          } else {
+            alert('Gemini proxy not configured. Check server.');
+          }
+        }catch(err){ alert('Error calling Gemini proxy (this demo expects server endpoint /api/gemini-text)'); }
+      }else{
+        alert('Tool run demo: replace with actual tool implementation. JSON saved to clipboard.');
+        navigator.clipboard.writeText(JSON.stringify(cfg, null, 2));
+      }
+    });
+  }
+
+  // Generates a modern JSON config for a tool
+  function generateToolJSON(tool){
+    return {
+      version: "1.0",
+      id: tool.id,
+      name: tool.name,
+      category: tool.category,
+      description: tool.desc || "",
+      inputs: ["file", "text", "options"],
+      outputs: ["result", "log"],
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  // Add tool flow
+  function enableAddTool(){
+    byId('addToolPanel').classList.remove('hidden');
+    byId('addToolBtn').classList.add('hidden');
+  }
+  function cancelAdd(){
+    byId('addToolPanel').classList.add('hidden');
+    byId('addToolBtn').classList.remove('hidden');
+  }
+  function saveTool(){
+    const name = byId('newToolName').value.trim();
+    const category = byId('newToolCategory').value;
+    const desc = byId('newToolDesc').value.trim();
+    if(!name){ alert('Tool name required'); return; }
+    const id = category + '-' + name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,40);
+    DATA.tools.unshift({ id, name, category, desc });
+    // re-render
+    renderTools(byId('categoryFilter').value);
+    populateNavCategories();
+    populateCategoryFilter();
+    // hide
+    cancelAdd();
+  }
+
+  // Filter helper
+  function filterByCategory(catId){
+    byId('categoryFilter').value = catId;
+    renderTools(catId);
+  }
+
+  // Export JSON
+  function exportJSON(){
+    const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'digital-matrix-tools.json'; document.body.appendChild(a); a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Search input events
+  searchInput.addEventListener('input', (e)=> searchSuggestions(e.target.value));
+  document.addEventListener('click', (e)=>{ if(!byId('searchInput').contains(e.target)) suggestionsBox.classList.add('hidden'); });
+
+  // Hook up UI interactions
+  byId('addToolBtn').addEventListener('click', enableAddTool);
+  byId('cancelAdd').addEventListener('click', cancelAdd);
+  byId('saveTool').addEventListener('click', saveTool);
+  byId('categoryFilter').addEventListener('change', (e)=> renderTools(e.target.value));
+  byId('exportJSON').addEventListener('click', exportJSON);
+  byId('exploreBtn').addEventListener('click', ()=> location.href='#tools');
+
+  // Contact form
+  byId('contactForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const payload = {
+      name: byId('contactName').value,
+      email: byId('contactEmail').value,
+      message: byId('contactMessage').value
+    };
+    // Send to your server endpoint - placeholder:
+    // fetch('/api/contact', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    alert('Message sent (demo). Wire up /api/contact on server to process.');
+    e.target.reset();
+  });
+  byId('contactReset').addEventListener('click', ()=> byId('contactForm').reset());
+
+  // Mobile menu toggle
+  byId('menuMobileBtn').addEventListener('click', ()=> byId('mobileNav').classList.toggle('hidden'));
+
+  // Load Spline scene if provided - replace 'YOUR_SPLINE_URL' with your Spline scene URL
+  (function loadSpline(){
+    const splineUrl = ''; // e.g. "https://prod.spline.design/XXXXXXXX/scene.splinecode"
+    const iframe = byId('splineFrame');
+    if(splineUrl){
+      iframe.src = splineUrl;
+    } else {
+      // Demo placeholder content
+      iframe.srcdoc = `<style>body{margin:0;background:linear-gradient(120deg,#071024,#061026);} .box{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#9fd8ff;font-family:Inter,Arial;}</style><div class="box"><div><div style="font-size:18px">Spline 3D Scene</div><div style="font-size:12px;margin-top:6px;color:#bcdffd">Replace splineFrame.src with your Spline scene URL</div></div></div>`;
+    }
+  })();
+
+  // Initialize on load
+  function init(){
+    populateNavCategories();
+    populateCategoryFilter();
+    renderTools('all');
+    // small entrance animations
+    gsap.from('header', { y:-40, opacity:0, duration:0.8, ease:'power3.out' });
+    gsap.from('#home h1', { y:30, opacity:0, duration:0.9, delay:0.2 });
+    gsap.from('#home p', { y:20, opacity:0, duration:0.9, delay:0.35 });
+    gsap.from('#tools .tool-card', { opacity:0, y:20, stagger:0.06, duration:0.6, delay:0.4 });
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+
+  // Expose DATA for dev console if needed
+  window.DIGITALMATRIX = { DATA, renderTools, generateToolJSON };
+  </script>
+
+  <!-- Developer notes (do not remove) -->
+  <!--
+    - Replace Spline iframe src with your Spline scene URL in loadSpline().
+    - Implement server endpoints:
+        POST /api/gemini-text  { prompt } -> server should call Google Gemini and return results
+        POST /api/contact { name, email, message } -> send email or store
+    - Do NOT store API keys in client-side code. Use server-side environment variables.
+    - Ad slots: add ad scripts where you see comments or in footer/sidebars.
+    - To persist DATA across reloads, implement a simple server (Node/Express) to save and load the JSON (or use localStorage).
+  -->
+
+</body>
+</html>
